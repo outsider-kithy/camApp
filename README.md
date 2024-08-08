@@ -9,7 +9,6 @@ React Native(Expo)を用いたカメラアプリの基本
 ## Getting Start
 
 ```shell
-
 npm install
 npm start
 ```

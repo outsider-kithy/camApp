@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
-import { Button, StyleSheet, Text, View, Image } from 'react-native';
+import { StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
-
+import { Button } from 'react-native-paper';
 
 export default function App() {
   const cameraRef = useRef(null);
@@ -16,7 +16,7 @@ export default function App() {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>アプリがカメラへのアクセスを求めています。</Text>
+        <Text style={styles.text}>アプリがカメラへのアクセスを求めています。</Text>
         <Button onPress={requestPermission} title="許可" />
       </View>
     );
@@ -45,9 +45,12 @@ export default function App() {
     if (image) {
       try {
         const asset = await MediaLibrary.createAssetAsync(image);
-        alert('写真を保存しました。');
+        console.log(asset);
+        Alert.alert('保存完了', '写真を保存しました', [
+          {text: '閉じる', onPress: () => console.log('Cancel Pressed'),},
+          {text: 'OK', onPress: () => console.log('OK Pressed')},
+        ]);
         setImage(null);
-        console.log('保存完了');
       } catch (error) {
         console.log(error);
       }
@@ -55,15 +58,24 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
-      <CameraView style={styles.camera} ref={cameraRef}>
-        <View style={styles.buttonContainer}>
-            <Button style={styles.button} title='撮影' onPress={takePicture}></Button>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <CameraView style={styles.camera} ref={cameraRef}> 
+          {/* 上部のオーバーレイ */}
+          <TouchableOpacity style={styles.overlayTop}>
+            <Text style={styles.text}>分類したい物体を撮影してください</Text>
+          </TouchableOpacity>
+          {/* 下部のオーバーレイ */}
+          <TouchableOpacity style={styles.overlayBottom}>
+            <Button icon="camera" mode="contained" style={styles.takeButton} onPress={takePicture}>撮影</Button>
+            {/* 撮影した画像を表示 */}
+            <View style={styles.saveContainer}>
+              {/* imgageがある場合だけ表示 */}
+              {image && <Image source={{ uri: image }} style={styles.takedImg} /> }
+              {image && <Button icon="file" mode="contained" style={styles.saveButton} onPress={savePicture}>保存</Button> }
+            </View>
+          </TouchableOpacity>
       </CameraView>
-      <Image source={{ uri: image }} style={styles.camera} />
-      <Button style={styles.button} title="保存" onPress={savePicture}></Button>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -72,27 +84,48 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  message: {
-    textAlign: 'center',
-    paddingBottom: 10,
+  saveContainer: {
+    marginTop: 16,
+    marginBottom :16,
   },
   camera: {
     flex: 1,
   },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
-    margin: 64,
+  overlayTop:{
+    position: 'absolute',
+    top: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 16,
+    width: '100%',
+    alignItems: 'center',
   },
-  button: {
-   	display:'block',
-	backgroundColor: 'blue',
-	color: 'white',
+  overlayBottom:{
+    position: 'absolute',
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 16,
+    width: '100%',
+    alignItems: 'center',
+  },
+  takeButton: {
+    color: '#fff',
+    backgroundColor: '#ff0000',
+    width: 100,
+    marginTop: 16,
+  },
+  saveButton: {
+    color: '#fff',
+    width: 100,
+    marginTop: 16,
+  },
+  takedImg:{
+    width: 100,
+    height: 100,
+    borderRadius: 5,
   },
   text: {
-    fontSize: 24,
+    fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-  },
+  }
 });
